@@ -1,0 +1,159 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{graphicx}
+
+\geometry{margin=2.5cm}
+
+\definecolor{codegray}{gray}{0.95}
+\lstset{
+    backgroundcolor=\color{codegray},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    columns=fullflexible,
+    keepspaces=true
+}
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection.}{1em}{}
+
+\title{\textbf{Instrukcja instalacji i uruchamiania systemu Aletheia}}
+\author{Przygotowana dla wdrożenia na serwerze z obsługą GPU}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section*{O projekcie Aletheia}
+\textbf{Aletheia} to samo-refleksyjny agent poznawczy, który symuluje procesy takie jak:
+\begin{itemize}
+  \item pamięć i refleksja,
+  \item nastroje i stany emocjonalne,
+  \item tożsamość i relacje,
+  \item głos wewnętrzny i marzenia senne,
+  \item pytania egzystencjalne.
+\end{itemize}
+
+System oparty jest o architekturę modularną, model lokalny LLM oraz cykliczny harmonogram działań.
+
+\section{Klonowanie repozytorium}
+\begin{lstlisting}
+git clone https://github.com/twoje-konto/Aletheia.git
+cd Aletheia
+\end{lstlisting}
+
+Lub skopiuj wszystkie pliki projektu do katalogu na serwerze (np. \texttt{~/aletheia}).
+
+\section{Utworzenie środowiska Pythona}
+\begin{lstlisting}
+python3 -m venv venv
+source venv/bin/activate
+\end{lstlisting}
+
+\section{Instalacja zależności}
+\begin{lstlisting}
+pip install -r requirements.txt
+\end{lstlisting}
+
+Dla obsługi GPU (CUDA 11.8, Tesla P40):
+\begin{lstlisting}
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+\end{lstlisting}
+
+\section{Plik konfiguracyjny .env}
+
+Utwórz plik \texttt{.env} w katalogu głównym i wklej następującą zawartość:
+
+\begin{lstlisting}
+API_PORT=8000
+
+REFLECTION_INTERVAL=300
+DREAM_INTERVAL=900
+MONOLOGUE_INTERVAL=1200
+EXISTENTIAL_INTERVAL=1800
+PULSE_INTERVAL=60
+
+USE_LOCAL_MODEL=true
+MULTI_GPU=true
+LOCAL_MODEL_NAME=mistral-7b
+
+OPENAI_API_KEY=sk-...
+GPT_MODEL=gpt-4
+
+AGENT_NAME=Aletheia
+ENVIRONMENT=local
+\end{lstlisting}
+
+\section{Struktura katalogów danych}
+Jeśli uruchamiasz system po raz pierwszy:
+
+\begin{lstlisting}
+mkdir -p data/shadows data/logs data/messages snapshots
+touch data/thoughts.json data/identity.json data/affective_state.json data/relational_map.json
+\end{lstlisting}
+
+\section{Lokalny model językowy}
+Pobierz model LLM (np. Mistral-7B) do katalogu \texttt{models/}:
+
+\begin{lstlisting}
+models/mistral-7b/
+├── config.json
+├── pytorch_model.bin
+├── tokenizer.json
+\end{lstlisting}
+
+Możesz skorzystać z modeli np. na \url{https://huggingface.co} (np. TheBloke/Mistral-7B).
+
+\section{Uruchamianie serwera API}
+\begin{lstlisting}
+./scripts/start.sh
+\end{lstlisting}
+
+Lub ręcznie:
+\begin{lstlisting}
+uvicorn aletheia.api.main:app --host 0.0.0.0 --port 8000 --reload
+\end{lstlisting}
+
+Panel dokumentacji REST API: \url{http://localhost:8000/docs}
+
+\section{Uruchamianie demona refleksji}
+\begin{lstlisting}
+./scripts/run_reflection_loop.sh
+\end{lstlisting}
+
+Lub ręcznie:
+\begin{lstlisting}
+python3 aletheia/scheduler/main.py
+\end{lstlisting}
+
+Uruchamia wewnętrzne procesy: refleksję, sen, pytania, monolog i puls.
+
+\section{Podgląd świadomości (terminal)}
+\begin{lstlisting}
+python3 aletheia/consciousness_panel.py
+\end{lstlisting}
+
+Zobaczysz: nastrój, relacje, ostatni monolog i myśli.
+
+\section{Tworzenie snapshotów}
+\begin{lstlisting}
+./scripts/run_snapshot.sh
+\end{lstlisting}
+
+Tworzy zrzut stanu poznawczego Alethei w katalogu \texttt{snapshots/YYYYMMDD\_HHMMSS/}.
+
+\section{Kolejne kroki (opcjonalne)}
+\begin{itemize}
+  \item Stworzenie usługi systemowej (\texttt{systemd}) do automatycznego uruchamiania
+  \item Budowa panelu graficznego (web UI)
+  \item Połączenie Alethei z innymi agentami lub systemami
+\end{itemize}
+
+\end{document}

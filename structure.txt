@@ -1,0 +1,57 @@
+Aletheia/
+├── aletheia/                # Główna aplikacja (pakiet)
+│   ├── __init__.py
+│   ├── config.py            # Konfiguracja aplikacji
+│   ├── core/                # Główna logika Reflektora
+│   │   ├── memory.py (memory_vector.py)
+│   │   ├── affect.py (affect_system.py)
+│   │   ├── identity.py
+│   │   ├── relational.py
+│   │   ├── monologue.py
+│   │   ├── shadow.py
+│   │   ├── oracle_client.py
+│   │   └── multi_gpu_model_loader.py
+│   ├── api/                 # Serwis REST API
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── routes/
+│   │   │   ├── __init__.py
+│   │   │   ├── thoughts.py
+│   │   │   ├── identity.py
+│   │   │   ├── shadow.py
+│   │   │   ├── monologue.py
+│   │   │   ├── oracle.py (external_oracle_api.py)
+│   │   │   └── heartbeat.py
+│   │   └── utils.py
+│   ├── scheduler/           # Cykliczne procesy (demon refleksji)
+│   │   ├── main.py
+│   │   └── jobs/
+│   │       ├── reflect.py (reflex_agent.py)
+│   │       ├── dream.py (dream_module.py)
+│   │       ├── monologue.py
+│   │       ├── ego_questions.py
+│   │       └── pulse.py
+│   └── utils/
+│       ├── file_ops.py
+│       └── logging.py
+│
+├── models/                  # Lokalne modele LLM (np. Mistral)
+│   └── mistral-7b/
+│
+├── data/                    # Dane tożsamości
+│   ├── thoughts.json
+│   ├── identity.json (identity_map.json)
+│   ├── affective_state.json
+│   ├── relational_map.json
+│   ├── shadows/
+│   └── messages/
+│
+├── scripts/                 # Uruchamianie, deployment, snapshoty
+│   ├── start.sh
+│   ├── run_reflection_loop.sh
+│   └── generate_snapshot.sh
+│
+├── .env
+├── config.yaml              # Konfiguracja systemu jako YAML
+├── requirements.txt
+└── README.md

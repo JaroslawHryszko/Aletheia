@@ -1,0 +1,26 @@
+# === System ===
+agent_name: Aletheia
+environment: local
+
+# === API Server ===
+api:
+  port: 8000
+
+# === Scheduler Intervals (seconds) ===
+scheduler:
+  reflection_interval: 300
+  dream_interval: 900
+  monologue_interval: 1200
+  existential_interval: 1800
+  pulse_interval: 60
+
+# === Local Model (LLM) ===
+local_model:
+  use: true
+  multi_gpu: true
+  name: mistral-7b
+
+# === OpenAI Oracle ===
+openai:
+  api_key: sk-your-api-key-here
+  model: gpt-4
