@@ -23,17 +23,17 @@ def load_model():
     # Tokenizer
     tokenizer = AutoTokenizer.from_pretrained(
         model_path,
-        use_fast=True,
-        local_files_only
+        local_files_only,
+        use_fast=True
     )
 
     # Model (half-precision + multi-GPU aware)
     model = AutoModelForCausalLM.from_pretrained(
         model_path,
         device_map=device_map,
+        local_files_only,
         torch_dtype=torch.float16 if use_cuda else torch.float32,
-        low_cpu_mem_usage=True,
-        local_files_only
+        low_cpu_mem_usage=True
     )
 
     model.eval()
