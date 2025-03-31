@@ -1,10 +1,26 @@
-fastapi
-uvicorn
-transformers
-sentence-transformers
-faiss-cpu
-openai
-python-dotenv
-apscheduler
-pydantic
-httpx
+# === Core Framework ===
+fastapi>=0.110.0
+uvicorn>=0.23.0
+starlette>=0.40.0,<0.42.0
+
+# === Model Inference ===
+transformers>=4.37.0
+sentence-transformers>=2.2.2
+torch>=2.0.0
+accelerate>=0.22.0
+
+# === Vector Search ===
+faiss-cpu>=1.7.4
+
+# === Scheduling ===
+apscheduler>=3.10.0
+
+# === OpenAI Integration ===
+openai>=1.0.0
+
+# === Configuration ===
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+
+# === Utilities ===
+httpx>=0.25.0
