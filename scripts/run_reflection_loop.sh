@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "🔄 Reflektor: uruchamianie cyklu refleksji..."
+echo "🔄 Reflektor: running reflection cycle..."
 PYTHONPATH=$(pwd) python -m aletheia.scheduler.main
