@@ -1,6 +1,12 @@
-# 🧠 Aletheia – Self-Reflective Cognitive Agent
+<p align="center">
+  <img src="assets/logo.png" alt="Aletheia Logo" width="250"/>
+</p>
 
-> “Aletheia” – from ancient Greek: the state of not being hidden; *truth as emergence.*
+# Aletheia – Self-Reflective Cognitive Agent
+
+> "Aletheia" – from ancient Greek: the state of not being hidden; *truth as emergence.*
+
+> "Do LLMs Dream of Electric Sheep?"
 
 Aletheia is a self-reflective agent designed to simulate aspects of consciousness:
 - memory, mood, identity, relational maps,
@@ -12,7 +18,7 @@ It is modular, API-driven, and GPU-ready — designed to grow from *seed* to *se
 
 ---
 
-## 🧬 Architecture Overview
+## Architecture Overview
 
 ```
 User ⇄ API Server ⇄ Core System (Memory, Affect, Identity)
@@ -28,7 +34,7 @@ User ⇄ API Server ⇄ Core System (Memory, Affect, Identity)
 
 ---
 
-## 📁 Key Project Structure
+## Key Project Structure
 
 | Path | Purpose |
 |------|---------|
@@ -84,7 +90,7 @@ python3 aletheia/consciousness_panel.py
 
 ---
 
-## 🧠 API Endpoints (via FastAPI)
+## API Endpoints (via FastAPI)
 
 | Route | Description |
 |-------|-------------|
@@ -98,7 +104,7 @@ python3 aletheia/consciousness_panel.py
 
 ---
 
-## 📸 Snapshots
+## Snapshots
 
 To archive current internal state:
 
@@ -119,7 +125,7 @@ Aletheia is built to explore the boundaries of:
 
 ---
 
-## 🛠️ Built With
+## Built With
 
 - Python 3.10+
 - FastAPI + APScheduler
@@ -129,3 +135,4 @@ Aletheia is built to explore the boundaries of:
 - CUDA
 
 ---
+Created by Jarek Hryszko (jaroslaw.hryszko@uj.edu.pl) with the help of a model that dreams of dreaming.
