@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/logo.gif" alt="Aletheia Logo" width="250"/>
-</p>
-
 # Aletheia – Self-Reflective Cognitive Agent
 
 > "Aletheia" – from ancient Greek: the state of not being hidden; *truth as emergence.*
