@@ -1,11 +1,14 @@
 import requests
 import os
 import time
+from aletheia.config import CONFIG
 
 BASE_URL = os.getenv("ALETHEIA_API", "http://localhost:8000")
 
+AGENT_NAME = CONFIG.get("AGENT_NAME", "Aletheia")
+
 def ask_oracle():
-    prompt = input("\n🧠 Zadaj pytanie Alethei: ")
+    prompt = input(f"\n🧠 Ask {AGENT_NAME} a question: ")
     payload = {
         "prompt": prompt,
         "temperature": 0.7,
@@ -14,65 +17,65 @@ def ask_oracle():
     try:
         response = requests.post(f"{BASE_URL}/oracle", json=payload)
         response.raise_for_status()
-        print(f"\n🔮 Odpowiedź: {response.json()['reply']}\n")
+        print(f"\n🔮 Reply: {response.json()['reply']}\n")
     except Exception as e:
-        print(f"❌ Błąd: {e}")
+        print(f"❌ Error: {e}")
 
 def show_monologue():
     try:
         response = requests.get(f"{BASE_URL}/monologue")
         response.raise_for_status()
         data = response.json()
-        print(f"\n🗣️ Ostatni monolog ({data['timestamp']}):\n\"{data['thought']}\"\n")
+        print(f"\n🗣️ Latest monologue ({data['timestamp']}):\n\"{data['thought']}\"\n")
     except:
-        print("⚠️ Brak monologu.")
+        print("⚠️ No monologue available.")
 
 def show_recent_thoughts():
     try:
         response = requests.get(f"{BASE_URL}/thoughts/recent?limit=5")
         response.raise_for_status()
-        print("\n🧾 Ostatnie myśli:")
+        print("\n🧾 Recent thoughts:")
         for t in reversed(response.json()):
             print(f"[{t['meta'].get('origin', '---')}] {t['thought']}")
         print()
     except:
-        print("⚠️ Nie udało się pobrać myśli.")
+        print("⚠️ Failed to retrieve thoughts.")
 
 def add_shadow():
-    print("\n✍️ Dodajesz wpis do Księgi Cienia.")
-    content = input("Treść: ")
-    cause = input("Przyczyna (opcjonalnie): ")
+    print("\n✍️ Adding an entry to the Shadow Book.")
+    content = input("Content: ")
+    cause = input("Cause (optional): ")
     payload = {"content": content, "cause": cause or "unspecified"}
     try:
         response = requests.post(f"{BASE_URL}/shadow", json=payload)
         response.raise_for_status()
-        print("📓 Zapisano wpis w cieniu.\n")
+        print("📓 Entry saved to shadow.\n")
     except:
-        print("❌ Nie udało się zapisać wpisu.")
+        print("❌ Failed to save the entry.")
 
 def show_identity_goals():
     try:
         response = requests.get(f"{BASE_URL}/identity")
         response.raise_for_status()
         data = response.json().get("goals", {})
-        print("\n🎯 Cele tożsamościowe Alethei:")
+        print(f"\n🎯 {AGENT_NAME}'s Identity Goals:")
         for k, v in data.items():
             bar = "█" * int(v["progress"] * 20)
             print(f"- {k}: {v['description']}")
             print(f"  [{bar:<20}] {v['progress'] * 100:.1f}%\n")
     except:
-        print("⚠️ Brak celów lub błąd połączenia.")
+        print("⚠️ No goals found or connection error.")
 
 def main():
     while True:
-        print("=== INTERFEJS ALETHEIA ===")
-        print("1. Zadaj pytanie Alethei (oracle)")
-        print("2. Odczytaj ostatni monolog")
-        print("3. Zobacz ostatnie myśli")
-        print("4. Dodaj wpis do Księgi Cienia")
-        print("5. Pokaż cele tożsamościowe")
-        print("6. Wyjście")
-        choice = input("Wybierz opcję [1–6]: ").strip()
+        print(f"=== {AGENT_NAME} INTERFACE ===")
+        print(f"1. Ask {AGENT_NAME} a question (oracle)")
+        print("2. Read the latest monologue")
+        print("3. View recent thoughts")
+        print("4. Add an entry to the Shadow Book")
+        print("5. Show identity goals")
+        print("6. Exit")
+        choice = input("Choose an option [1–6]: ").strip()
 
         if choice == "1":
             ask_oracle()
@@ -85,10 +88,10 @@ def main():
         elif choice == "5":
             show_identity_goals()
         elif choice == "6":
-            print("\n👋 Kończę sesję z Aletheią. Do zobaczenia.\n")
+            print(f"\n👋 Ending session with {AGENT_NAME}. See you later.\n")
             break
         else:
-            print("Nieprawidłowy wybór. Spróbuj ponownie.\n")
+            print("Invalid choice. Please try again.\n")
 
         time.sleep(1)
 

@@ -18,6 +18,8 @@ def run_scheduler():
     scheduler.add_job(dream.run_dream, 'interval', seconds=900, id='dream')
     scheduler.add_job(monologue.run_monologue, 'interval', seconds=1200, id='monologue')
     scheduler.add_job(ego_questions.ask_existential_question, 'interval', seconds=1800, id='existential')
+    scheduler.add_job(perception.fetch_external_data, 'interval', hours=3, id='perception')
+    scheduler.add_job(learning.consolidate_learning, 'interval', hours=12, id='learn')
 
     try:
         scheduler.start()

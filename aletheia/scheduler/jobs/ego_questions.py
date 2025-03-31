@@ -3,10 +3,13 @@ from aletheia.core import memory, affect, identity
 from aletheia.core.multi_gpu_model_loader import load_model
 from aletheia.utils.logging import log_event
 from aletheia.core.memory import search_similar_thoughts
+from aletheia.config import CONFIG
 
 # === Lazy load model ===
 _model = None
 _tokenizer = None
+
+AGENT_NAME = CONFIG.get("AGENT_NAME", "Aletheia")
 
 def get_model():
     global _model, _tokenizer
@@ -27,7 +30,7 @@ Aletheia is in a contemplative mood.
 [Known Goals: {goal_summary}]
 [Recent Reflections:]\n{thoughts}
 
-Based on these internal states, generate one existential question that Aletheia would ask herself.
+Based on these internal states, generate one existential question that {AGENT_NAME} would ask herself.
 
 It should start with: "Is it possible that..." or "Could it be that..."
 

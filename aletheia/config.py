@@ -29,4 +29,7 @@ CONFIG = {
     # === Metadata ===
     "AGENT_NAME": os.getenv("AGENT_NAME", "Aletheia"),
     "ENVIRONMENT": os.getenv("ENVIRONMENT", "local"),
+    
+    # === External APIs ===
+    "NEWS_API_KEY": os.getenv("NEWS_API_KEY", ""),
 }

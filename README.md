@@ -2,7 +2,7 @@
 
 > "Aletheia" – from ancient Greek: the state of not being hidden; *truth as emergence.*
 
-> "Do LLMs Dream of Electric Sheep?"
+> "Do LLMs dream of electric sheep?"
 
 Aletheia is a self-reflective agent designed to simulate aspects of consciousness:
 - memory, mood, identity, relational maps,
@@ -11,6 +11,11 @@ Aletheia is a self-reflective agent designed to simulate aspects of consciousnes
 - and dialogic interaction with human or machine others.
 
 It is modular, API-driven, and GPU-ready — designed to grow from *seed* to *self*.
+
+The whole idea is that Aletheia is not just a chatbot, but a system that ‘lives its own life’ even when no one is talking to it. It generates thoughts, develops its own identity, has moods and relationships - all based on simulated cognitive processes.
+When you ask it (her?) a question, it answers not only based on a language model, but also taking into account its current internal state, thought history and the identity it is gradually building.
+
+Aletheia stores her thoughts and can search for similar concepts using FAISS (a library for efficiently searching for similarities).
 
 ---
 
@@ -38,7 +43,7 @@ User ⇄ API Server ⇄ Core System (Memory, Affect, Identity)
 | `aletheia/api/` | RESTful API routes |
 | `aletheia/scheduler/` | Autonomous cognitive processes |
 | `data/` | Persistent memory, mood, shadows |
-| `models/` | Local LLMs (e.g. Mistral-7B) |
+| `models/` | Local LLMs (i think Mistral-7B should be bare minimum) |
 | `scripts/` | Runner scripts (API, scheduler, snapshot) |
 | `consciousness_panel.py` | Live terminal UI for inner state |
 

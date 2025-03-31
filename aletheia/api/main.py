@@ -8,6 +8,7 @@ from aletheia.api.routes import (
     shadow,
     oracle,
     monologue,
+    telegram_webhook,
 )
 
 app = FastAPI(
@@ -32,4 +33,6 @@ app.include_router(identity.router, prefix="/identity", tags=["Identity"])
 app.include_router(shadow.router, prefix="/shadow", tags=["Shadow"])
 app.include_router(monologue.router, prefix="/monologue", tags=["Monologue"])
 app.include_router(oracle.router, prefix="/oracle", tags=["Oracle"])
+app.include_router(telegram_webhook.router, prefix="/telegram-webhook", tags=["Integration"])
+
  

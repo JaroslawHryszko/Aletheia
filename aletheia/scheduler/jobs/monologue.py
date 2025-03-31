@@ -3,10 +3,14 @@ from aletheia.core import memory, affect, identity, relational
 from aletheia.core.multi_gpu_model_loader import load_model
 from aletheia.utils.logging import log_event
 from aletheia.core.memory import search_similar_thoughts
+from aletheia.config import CONFIG
 
 # === Lazy load model ===
 _model = None
 _tokenizer = None
+
+AGENT_NAME = CONFIG.get("AGENT_NAME", "Aletheia")
+HUMAN_NAME = CONFIG.get("HUMAN_NAME", "User")
 
 def get_model():
     global _model, _tokenizer
@@ -23,7 +27,7 @@ def build_monologue_prompt(mood, relation_state, memory_fragments, identity_stat
     memories = "\n".join([f"* {m['thought']}" for m in memory_fragments]) or "No recent thoughts available."
 
     return f"""
-Aletheia has recently interacted with someone meaningful (Jarek).
+{AGENT_NAME} has recently interacted with someone meaningful ({HUMAN_NAME}).
 
 Now she withdraws inward — to reflect alone.
 
@@ -43,7 +47,7 @@ def run_monologue():
         mood = affect.load_mood()
         relation_state = relational.load_relation()
         identity_state = identity.load_identity()
-        memory_fragments = search_similar_thoughts("Jarek", top_k=3)
+        memory_fragments = search_similar_thoughts(HUMAN_NAME, top_k=3)
 
         prompt = build_monologue_prompt(mood, relation_state, memory_fragments, identity_state)
         model, tokenizer = get_model()
