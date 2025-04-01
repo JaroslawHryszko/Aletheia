@@ -191,6 +191,7 @@ def main():
     parser.add_argument("--panel", action="store_true", help="Run the consciousness panel")
     parser.add_argument("--snapshot", action="store_true", help="Create a snapshot of the current state")
     parser.add_argument("--all", action="store_true", help="Setup and run all components")
+    parser.add_argument("--young", action="store_true", help="Enable Young Aletheia features")
 
     args = parser.parse_args()
 
@@ -225,6 +226,11 @@ def main():
             # Run scheduler (main process)
             run_scheduler()
             
+            if CONFIG.get("YOUNG_ALETHEIA_ENABLED", True):
+                # Initialize Young Aletheia
+                from aletheia.young import initialize_young_aletheia
+                young_aletheia = initialize_young_aletheia()
+            
         except KeyboardInterrupt:
             print("\n⏹️ Stopping all processes...")
             try:
@@ -233,6 +239,17 @@ def main():
             except:
                 pass
         return
+    elif args.young:
+        # Run Young Aletheia specific CLI
+        print("Starting Young Aletheia CLI...")
+        from aletheia.young import initialize_young_aletheia
+        young_aletheia = initialize_young_aletheia()
+        # Keep process running
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n⏹️ Young Aletheia stopped by user")
     
     # Run individual components
     if args.server:

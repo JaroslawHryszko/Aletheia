@@ -14,7 +14,7 @@ from aletheia.api.routes import (
 app = FastAPI(
     title="Aletheia API",
     description="Cognitive interface for the Aletheia self-reflective agent.",
-    version="0.1.0"
+    version="2.1"
 )
 
 # === CORS Configuration ===
@@ -34,5 +34,10 @@ app.include_router(shadow.router, prefix="/shadow", tags=["Shadow"])
 app.include_router(monologue.router, prefix="/monologue", tags=["Monologue"])
 app.include_router(oracle.router, prefix="/oracle", tags=["Oracle"])
 app.include_router(telegram_webhook.router, prefix="/telegram-webhook", tags=["Integration"])
+
+# === Initialize Young Aletheia if enabled ===
+if CONFIG.get("YOUNG_ALETHEIA_ENABLED", True):
+    from aletheia.young import initialize_young_aletheia
+    young_aletheia = initialize_young_aletheia(app)
 
  
