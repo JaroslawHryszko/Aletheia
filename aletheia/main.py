@@ -76,7 +76,7 @@ def show_banner():
     
     banner = f"""
     ╔════════════════════════════════════════════╗
-    ║ {agent_name.center(44)} ║
+    ║                  ALETHEIA                  ║
     ║                                            ║
     ║       Self-Reflective Cognitive Agent      ║
     ║                                            ║
