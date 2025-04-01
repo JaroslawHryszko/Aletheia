@@ -29,8 +29,33 @@ def setup_environment():
     ]
     
     for directory in directories:
-        directory.mkdir(parents=True, exist_ok=True)
-    
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+            
+            # Sprawdzenie, czy katalog został utworzony
+            if directory.exists() and directory.is_dir():
+                print(f"✅ Successfully created directory: {directory}")
+                
+                # Dodatkowe sprawdzenie uprawnień
+                try:
+                    test_file = directory / ".test_permissions"
+                    test_file.touch()
+                    test_file.unlink()  # usuwanie pliku testowego
+                    print(f"Permissions OK: Write access confirmed for {directory}")
+                except PermissionError:
+                    print(f"❌ Permission denied: Cannot write to {directory}")
+                except Exception as perm_error:
+                    print(f"⚠️ Permission check error for {directory}: {perm_error}")
+            else:
+                print(f"❌ Failed to create directory: {directory}")
+        
+        except PermissionError:
+            print(f"❌ Permission denied when creating directory: {directory}")
+        except OSError as e:
+            print(f"❌ Error creating directory {directory}: {e}")
+        except Exception as e:
+            print(f"❌ Unexpected error creating directory {directory}: {e}")
+        
     # Initialize core systems
     init_storage()        # Memory system
     init_identity()       # Identity system
