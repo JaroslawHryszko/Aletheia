@@ -32,4 +32,7 @@ CONFIG = {
     
     # === External APIs ===
     "NEWS_API_KEY": os.getenv("NEWS_API_KEY", ""),
+    
+    # === Young Aletheia ===
+    "YOUNG_ALETHEIA_ENABLED": os.getenv("YOUNG_ALETHEIA_ENABLED", "true").lower() == "true",
 }
