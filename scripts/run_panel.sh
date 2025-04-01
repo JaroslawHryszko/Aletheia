@@ -1,3 +1,3 @@
 #!/bin/bash
-echo "🔄 Reflektor: Running Interface Panel..."
-PYTHONPATH=$(pwd) python aletheia/cli/interface.py
+echo "🔄 Reflektor: Running Consciousness Panel..."
+PYTHONPATH=$(pwd) python aletheia/consciousness_panel.py
