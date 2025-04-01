@@ -166,15 +166,8 @@ def main():
     parser.add_argument("--panel", action="store_true", help="Run the consciousness panel")
     parser.add_argument("--snapshot", action="store_true", help="Create a snapshot of the current state")
     parser.add_argument("--all", action="store_true", help="Setup and run all components")
-    parser.add_argument("--help", action="store_true", help="Show extended help information")
 
     args = parser.parse_args()
-
-    # Handle custom help
-    if args.help:
-        show_banner()
-        show_extended_help()
-        return
 
     # Show banner
     show_banner()
