@@ -72,7 +72,7 @@ class ChildPersona(BaseModel):
     
     class Config:
         """Example configuration for documentation"""
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "Zosia",
                 "age": 7,
