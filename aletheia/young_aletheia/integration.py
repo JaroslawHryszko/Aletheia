@@ -56,7 +56,7 @@ class YoungAletheiaIntegration:
         self.learning_engine = LearningEngine(self.persona_manager, self.dev_model, self.data_dir)
         
         # Initialize telegram bot if configuration exists
-        from young_aletheia.telegram_bot import YoungAletheiaTelegramBot
+        from aletheia.young_aletheia.telegram_bot import YoungAletheiaTelegramBot
         self.telegram_bot = YoungAletheiaTelegramBot(
             CONFIG,
             self.persona_manager,
@@ -72,7 +72,7 @@ class YoungAletheiaIntegration:
         Args:
             app: FastAPI application instance
         """
-        from young_aletheia.interface import YoungAletheiaRouter
+        from aletheia.young_aletheia.interface import YoungAletheiaRouter
         
         # Create and setup router
         self.interface = YoungAletheiaRouter(
