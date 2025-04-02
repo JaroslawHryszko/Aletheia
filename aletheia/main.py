@@ -233,11 +233,6 @@ def main():
                 pass
     elif args.young:
             run_young_aletheia()
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            print("\n⏹️ Young Aletheia stopped by user")
     elif args.server:
         run_web_server()
     elif args.scheduler:
