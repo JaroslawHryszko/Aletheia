@@ -43,26 +43,26 @@
                     </div>
                 </div>
                 
-                <!-- Personality Traits -->
-                <div>
-                    <h2 class="text-xl font-semibold mb-4">Personality Traits</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {% for trait, value in persona.personality.dict().items() %}
-                            <div>
-                                <label for="{{ trait }}" class="block text-sm font-medium text-gray-700 mb-1">
-                                    {{ trait|capitalize }}
-                                </label>
-                                <input type="range" id="{{ trait }}" name="personality.{{ trait }}" 
-                                       min="0" max="1" step="0.1" value="{{ value }}" 
-                                       class="w-full">
-                                <div class="flex justify-between text-xs text-gray-500">
-                                    <span>Low</span>
-                                    <span>High</span>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
+				<!-- Personality Traits -->
+				<div>
+					<h2 class="text-xl font-semibold mb-4">Personality Traits</h2>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+						{% for trait, value in persona.personality.items() %}
+							<div>
+								<label for="{{ trait }}" class="block text-sm font-medium text-gray-700 mb-1">
+									{{ trait|capitalize }}
+								</label>
+								<input type="range" id="{{ trait }}" name="personality.{{ trait }}" 
+									   min="0" max="1" step="0.1" value="{{ value }}" 
+									   class="w-full">
+								<div class="flex justify-between text-xs text-gray-500">
+									<span>Low</span>
+									<span>High</span>
+								</div>
+							</div>
+						{% endfor %}
+					</div>
+				</div>
                 
                 <!-- Interests -->
                 <div>
@@ -99,7 +99,7 @@
                 <div>
                     <h2 class="text-xl font-semibold mb-4">Development Level</h2>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {% for area, value in persona.development.dict().items() %}
+                        {% for area, value in persona.development.items() %}
                             <div>
                                 <label for="{{ area }}" class="block text-sm font-medium text-gray-700 mb-1">
                                     {{ area|capitalize }}

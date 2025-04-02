@@ -47,20 +47,39 @@ class YoungAletheiaTelegramBot:
         self.conversation_active = False
         self.last_initiative_time = datetime.now() - timedelta(hours=2)
         
-        # Logger
+        # Set up enhanced logging
         self.logger = logging.getLogger("young_aletheia_bot")
         handler = logging.StreamHandler()
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
-        self.logger.setLevel(logging.INFO)
+        self.logger.setLevel(logging.DEBUG)  # Change to DEBUG for more verbose output
         
-        # Initialize bot
-        if self.token:
-            self.app = Application.builder().token(self.token).build()
-            self.setup_handlers()
+        # Validate token configuration
+        if not self.token:
+            self.logger.error("No Telegram token provided in configuration. Please check your .env or config.yaml file.")
+            self.logger.debug(f"Configuration keys available: {list(config.keys())}")
+            config_sample = {k: '...' for k in config.keys()}
+            self.logger.debug(f"Configuration structure: {config_sample}")
         else:
-            self.logger.warning("No Telegram token provided, bot functionality disabled")
+            self.logger.info(f"Telegram token found, length: {len(self.token)}")
+        
+        # Validate chat ID
+        if not self.chat_id:
+            self.logger.warning("No CHAT_ID provided in configuration. This will limit bot's ability to initiate conversations.")
+        
+        # Initialize bot with better error handling
+        if self.token:
+            try:
+                self.app = Application.builder().token(self.token).build()
+                self.logger.info("Telegram bot application initialized successfully")
+                self.setup_handlers()
+            except Exception as e:
+                self.logger.error(f"Error initializing Telegram bot application: {e}", exc_info=True)
+                self.logger.debug(f"Token prefix: {self.token[:4]}..." if len(self.token) > 4 else "Token too short")
+                self.app = None
+        else:
+            self.logger.warning("Bot functionality disabled due to missing token")
             self.app = None
     
     def setup_handlers(self):
@@ -330,10 +349,14 @@ class YoungAletheiaTelegramBot:
             Boolean indicating success
         """
         if not self.app:
-            self.logger.warning("Cannot start bot: No token provided")
+            self.logger.error("Cannot start bot: Application not initialized")
             return False
         
         try:
+            # Log config status before starting
+            self.logger.info(f"Starting bot with token: {'Available' if self.token else 'Not available'}")
+            self.logger.info(f"Chat ID status: {'Available' if self.chat_id else 'Not available'}")
+            
             # Start the bot
             await self.app.initialize()
             await self.app.start()
@@ -345,7 +368,15 @@ class YoungAletheiaTelegramBot:
             self.logger.info(f"Bot started for {self.persona_manager.persona.name}")
             return True
         except Exception as e:
-            self.logger.error(f"Error starting bot: {e}")
+            self.logger.error(f"Error starting bot: {e}", exc_info=True)
+            
+            # Check for common Telegram API errors
+            error_text = str(e).lower()
+            if "unauthorized" in error_text:
+                self.logger.error("Error suggests invalid token. Please check your TELEGRAM_TOKEN value.")
+            elif "network" in error_text or "connection" in error_text:
+                self.logger.error("Network error. Please check your internet connection.")
+            
             return False
     
     async def stop_bot(self):
