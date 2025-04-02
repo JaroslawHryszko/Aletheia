@@ -1,3 +1,10 @@
+"""
+Web Interface for Young Aletheia
+
+This module provides the REST API and web interface for Young Aletheia,
+allowing parents to interact with the child persona through a web browser.
+"""
+
 from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, HTTPException, Depends, Request, Form, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -11,17 +18,20 @@ import random
 from pathlib import Path
 
 class MessageRequest(BaseModel):
+    """Request model for sending messages to the child"""
     content: str
     language: Optional[str] = "english"
     parent_name: Optional[str] = None
 
 class MessageResponse(BaseModel):
+    """Response model for child messages"""
     content: str
     timestamp: str
     language: str
     sleep_status: bool
 
 class ChildStatusResponse(BaseModel):
+    """Response model for child status"""
     name: str
     age: int
     mood: Dict[str, float]
@@ -34,6 +44,16 @@ class YoungAletheiaRouter:
     """Handles API routes for the Young Aletheia interface"""
     
     def __init__(self, app, persona_manager, dev_model, message_generator, learning_engine):
+        """
+        Initialize the router
+        
+        Args:
+            app: FastAPI application
+            persona_manager: The persona manager instance
+            dev_model: The developmental model instance
+            message_generator: The message generator instance
+            learning_engine: The learning engine instance
+        """
         self.app = app
         self.persona_manager = persona_manager
         self.dev_model = dev_model
@@ -73,7 +93,15 @@ class YoungAletheiaRouter:
         self.app.include_router(self.router, prefix="/young", tags=["Young Aletheia"])
     
     async def send_message(self, request: MessageRequest) -> MessageResponse:
-        """Handle parent message to child"""
+        """
+        Handle parent message to child
+        
+        Args:
+            request: Message request
+            
+        Returns:
+            Message response
+        """
         try:
             # Check if child is sleeping
             sleep_status = self.persona_manager.is_sleeping()
@@ -107,7 +135,12 @@ class YoungAletheiaRouter:
             raise HTTPException(status_code=500, detail=str(e))
     
     async def get_child_status(self) -> ChildStatusResponse:
-        """Get current status of the child"""
+        """
+        Get current status of the child
+        
+        Returns:
+            Child status response
+        """
         try:
             persona = self.persona_manager.persona
             
@@ -138,7 +171,15 @@ class YoungAletheiaRouter:
             raise HTTPException(status_code=500, detail=str(e))
     
     async def update_child(self, request: Dict[str, Any]) -> ChildStatusResponse:
-        """Update child parameters"""
+        """
+        Update child parameters
+        
+        Args:
+            request: Update data
+            
+        Returns:
+            Updated child status
+        """
         try:
             # Update persona with provided values
             self.persona_manager.update_persona(request)
@@ -149,7 +190,12 @@ class YoungAletheiaRouter:
             raise HTTPException(status_code=500, detail=str(e))
     
     async def websocket_endpoint(self, websocket: WebSocket):
-        """WebSocket endpoint for real-time communication"""
+        """
+        WebSocket endpoint for real-time communication
+        
+        Args:
+            websocket: WebSocket connection
+        """
         await websocket.accept()
         self.active_connections.append(websocket)
         
@@ -196,7 +242,15 @@ class YoungAletheiaRouter:
                 pass
     
     async def web_interface(self, request: Request) -> HTMLResponse:
-        """Render the web interface for interaction"""
+        """
+        Render the web interface for interaction
+        
+        Args:
+            request: HTTP request
+            
+        Returns:
+            HTML response
+        """
         persona = self.persona_manager.persona
         status = await self.get_child_status()
         
@@ -211,7 +265,15 @@ class YoungAletheiaRouter:
         )
     
     async def customization_interface(self, request: Request) -> HTMLResponse:
-        """Render the customization interface"""
+        """
+        Render the customization interface
+        
+        Args:
+            request: HTTP request
+            
+        Returns:
+            HTML response
+        """
         persona = self.persona_manager.persona
         
         return self.templates.TemplateResponse(
@@ -223,7 +285,12 @@ class YoungAletheiaRouter:
         )
     
     async def broadcast_message(self, message: Dict[str, Any]):
-        """Broadcast message to all connected WebSocket clients"""
+        """
+        Broadcast message to all connected WebSocket clients
+        
+        Args:
+            message: Message to broadcast
+        """
         for connection in self.active_connections:
             try:
                 await connection.send_json(message)

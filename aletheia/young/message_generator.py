@@ -1,16 +1,29 @@
-# aletheia/young/message_generator.py
+"""
+Message Generator for Young Aletheia
+
+This module generates child-like messages based on the child's persona,
+developmental level, and context of the conversation.
+"""
+
 import random
 from typing import List, Dict, Any, Tuple, Optional
 import re
 import emoji
 from datetime import datetime
 from aletheia.core.multi_gpu_model_loader import load_model
-from aletheia.core.cognitive_architecture import generate_emergent_thought
+from aletheia.utils.logging import log_event
 
 class ChildMessageGenerator:
     """Generates child-like messages based on development level and persona"""
     
     def __init__(self, persona_manager, dev_model):
+        """
+        Initialize the message generator
+        
+        Args:
+            persona_manager: The persona manager instance
+            dev_model: The developmental model instance
+        """
         self.persona_manager = persona_manager
         self.dev_model = dev_model
         self._model = None
@@ -24,7 +37,17 @@ class ChildMessageGenerator:
     
     def generate_message(self, context: Dict[str, Any], trigger: str = "general", 
                          prompt: Optional[str] = None) -> str:
-        """Generate a child-like message based on context and developmental state"""
+        """
+        Generate a child-like message based on context and developmental state
+        
+        Args:
+            context: Dictionary with context information for generation
+            trigger: The trigger type for the message (e.g., "greeting", "question")
+            prompt: Optional pre-built prompt to use instead of building one
+            
+        Returns:
+            Generated message text
+        """
         persona = self.persona_manager.persona
         
         # Check if child would be sleeping
@@ -78,7 +101,17 @@ class ChildMessageGenerator:
     
     def _build_message_prompt(self, trigger: str, characteristics: Dict[str, Any], 
                              context: Dict[str, Any]) -> str:
-        """Build a prompt for message generation"""
+        """
+        Build a prompt for message generation
+        
+        Args:
+            trigger: Type of message to generate
+            characteristics: Response characteristics from developmental model
+            context: Additional context for generation
+            
+        Returns:
+            Prompt string to feed to the language model
+        """
         persona = self.persona_manager.persona
         
         # Base prompt with persona information
@@ -166,7 +199,16 @@ Generate {persona.name}'s message:
         return prompt
     
     def _process_generated_text(self, text: str, characteristics: Dict[str, Any]) -> str:
-        """Process generated text to make it more child-like based on development"""
+        """
+        Process generated text to make it more child-like based on development
+        
+        Args:
+            text: The raw generated text
+            characteristics: The response characteristics
+            
+        Returns:
+            Processed text with child-like features
+        """
         persona = self.persona_manager.persona
         
         # Remove any non-message content (like prompt echoing)
@@ -211,7 +253,15 @@ Generate {persona.name}'s message:
         return text
     
     def _simplify_punctuation(self, text: str) -> str:
-        """Simplify punctuation to be more child-like"""
+        """
+        Simplify punctuation to be more child-like
+        
+        Args:
+            text: Original text
+            
+        Returns:
+            Text with child-like punctuation
+        """
         # Sometimes use multiple exclamation marks
         if "!" in text and random.random() < 0.5:
             text = re.sub(r"!", "!!" if random.random() < 0.5 else "!!!", text)
@@ -223,7 +273,15 @@ Generate {persona.name}'s message:
         return text
     
     def _add_emojis(self, text: str) -> str:
-        """Add child-appropriate emojis to text"""
+        """
+        Add child-appropriate emojis to text
+        
+        Args:
+            text: Original text
+            
+        Returns:
+            Text with added emojis
+        """
         child_emojis = [
             "😊", "😃", "😄", "🙂", "😁", "🤗", "🤔", "😮", "😎", "🌟", 
             "✨", "🐱", "🐶", "🦄", "🌈", "🍦", "🍭", "🎨", "📚", "🚀"
@@ -244,7 +302,15 @@ Generate {persona.name}'s message:
         return text
     
     def _introduce_spelling_error(self, text: str) -> str:
-        """Introduce a minor, realistic child-like spelling error"""
+        """
+        Introduce a minor, realistic child-like spelling error
+        
+        Args:
+            text: Original text
+            
+        Returns:
+            Text with a minor spelling error
+        """
         words = text.split()
         if len(words) < 3:
             return text
@@ -279,7 +345,15 @@ Generate {persona.name}'s message:
         return ' '.join(words)
     
     def _translate_complexity_to_text(self, complexity: float) -> str:
-        """Translate a complexity value to descriptive text"""
+        """
+        Translate a complexity value to descriptive text
+        
+        Args:
+            complexity: Value between 0.0 and 1.0
+            
+        Returns:
+            Descriptive text of the complexity level
+        """
         if complexity < 0.3:
             return "basic"
         elif complexity < 0.5:
@@ -292,7 +366,12 @@ Generate {persona.name}'s message:
             return "very advanced"
     
     def _generate_sleeping_response(self) -> str:
-        """Generate a response indicating the child is sleeping"""
+        """
+        Generate a response indicating the child is sleeping
+        
+        Returns:
+            Message indicating the child is sleeping
+        """
         persona = self.persona_manager.persona
         
         responses = [
@@ -304,7 +383,15 @@ Generate {persona.name}'s message:
         return random.choice(responses)
     
     def _estimate_message_sentiment(self, message: str) -> float:
-        """Estimate the sentiment of a message (simple heuristic)"""
+        """
+        Estimate the sentiment of a message (simple heuristic)
+        
+        Args:
+            message: The message text
+            
+        Returns:
+            Sentiment value between 0.0 and 1.0
+        """
         # Simple keyword based sentiment analysis
         positive_words = [
             "happy", "love", "wonderful", "great", "awesome", "fun", "exciting",
@@ -332,7 +419,15 @@ Generate {persona.name}'s message:
         return max(0.0, min(1.0, sentiment))
     
     def generate_conversation_starter(self, trigger_type: str = None) -> str:
-        """Generate a conversation starter based on the child's persona and state"""
+        """
+        Generate a conversation starter based on the child's persona and state
+        
+        Args:
+            trigger_type: Optional trigger type to use
+            
+        Returns:
+            Generated conversation starter or None if not appropriate
+        """
         persona = self.persona_manager.persona
         
         # Check if child would be sleeping

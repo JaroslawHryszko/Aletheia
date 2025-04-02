@@ -1,411 +1,493 @@
-# aletheia/young/learning_engine.py
-from typing import Dict, Any, List, Optional
-import random
-from datetime import datetime
-import json
-import requests
-from pathlib import Path
+"""
+Message Generator for Young Aletheia
 
-class LearningEngine:
-    """Manages the child's learning activities and internet exploration"""
+This module generates child-like messages based on the child's persona,
+developmental level, and context of the conversation.
+"""
+
+import random
+from typing import List, Dict, Any, Tuple, Optional
+import re
+import emoji
+from datetime import datetime
+from aletheia.core.multi_gpu_model_loader import load_model
+from aletheia.utils.logging import log_event
+
+class ChildMessageGenerator:
+    """Generates child-like messages based on development level and persona"""
     
-    def __init__(self, persona_manager, dev_model, data_dir: Path):
+    def __init__(self, persona_manager, dev_model):
+        """
+        Initialize the message generator
+        
+        Args:
+            persona_manager: The persona manager instance
+            dev_model: The developmental model instance
+        """
         self.persona_manager = persona_manager
         self.dev_model = dev_model
-        self.data_dir = data_dir
-        self.learning_log_file = data_dir / "learning_log.json"
-        self.learning_log = self._load_learning_log()
-        self.api_keys = self._load_api_keys()
+        self._model = None
+        self._tokenizer = None
     
-    def _load_learning_log(self) -> Dict[str, Any]:
-        """Load the learning log or create default"""
-        if self.learning_log_file.exists():
-            try:
-                with open(self.learning_log_file, "r") as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"Error loading learning log: {e}")
-                return self._create_default_learning_log()
-        else:
-            return self._create_default_learning_log()
+    def get_model(self):
+        """Lazy-load the language model"""
+        if self._model is None or self._tokenizer is None:
+            self._model, self._tokenizer = load_model()
+        return self._model, self._tokenizer
     
-    def _create_default_learning_log(self) -> Dict[str, Any]:
-        """Create a default learning log"""
-        return {
-            "learning_events": [],
-            "topics_explored": {},
-            "favorite_sources": {},
-            "questions_asked": [],
-            "last_learning_time": datetime.now().isoformat(),
-            "daily_learning_count": 0
-        }
-    
-    def _save_learning_log(self):
-        """Save the learning log to file"""
-        self.data_dir.mkdir(parents=True, exist_ok=True)
-        with open(self.learning_log_file, "w") as f:
-            json.dump(self.learning_log, f, indent=2)
-    
-    def _load_api_keys(self) -> Dict[str, str]:
-        """Load API keys for learning services"""
-        api_keys_file = self.data_dir.parent.parent / ".env"
-        if not api_keys_file.exists():
-            return {}
+    def generate_message(self, context: Dict[str, Any], trigger: str = "general", 
+                         prompt: Optional[str] = None) -> str:
+        """
+        Generate a child-like message based on context and developmental state
         
-        api_keys = {}
-        try:
-            with open(api_keys_file, "r") as f:
-                for line in f:
-                    if "=" in line and not line.strip().startswith("#"):
-                        key, value = line.strip().split("=", 1)
-                        if key.endswith("_API_KEY"):
-                            api_keys[key] = value
-            return api_keys
-        except Exception as e:
-            print(f"Error loading API keys: {e}")
-            return {}
-    
-    def generate_learning_activity(self) -> Dict[str, Any]:
-        """Generate a natural learning activity based on the child's interests"""
+        Args:
+            context: Dictionary with context information for generation
+            trigger: The trigger type for the message (e.g., "greeting", "question")
+            prompt: Optional pre-built prompt to use instead of building one
+            
+        Returns:
+            Generated message text
+        """
         persona = self.persona_manager.persona
         
-        # Select an interest to explore
-        interest = random.choice(persona.interests)
+        # Check if child would be sleeping
+        if self.persona_manager.is_sleeping() and trigger != "nightmare":
+            return self._generate_sleeping_response()
         
-        # Generate a topic within that interest
-        topics_by_interest = {
-            "animals": ["cats", "dogs", "elephants", "dinosaurs", "sea creatures", "birds", "insects"],
-            "space": ["planets", "stars", "astronauts", "rockets", "the moon", "the sun", "black holes"],
-            "drawing": ["colors", "shapes", "art techniques", "famous painters", "drawing animals"],
-            "books": ["fairy tales", "adventure stories", "character types", "story elements"],
-            "nature": ["trees", "flowers", "weather", "seasons", "mountains", "oceans"]
-        }
+        # Get response characteristics based on development
+        if "response_characteristics" not in context:
+            context["response_characteristics"] = self.dev_model._calculate_response_characteristics("")
         
-        # Extract the main category from the interest
-        main_category = interest.split(",")[0].strip().lower()
+        characteristics = context["response_characteristics"]
         
-        # Get topics for the category or use default
-        topics = topics_by_interest.get(main_category, ["interesting facts", "basic concepts", "fun information"])
-        topic = random.choice(topics)
+        # Build the prompt based on persona and trigger
+        if prompt is None:
+            prompt = self._build_message_prompt(trigger, characteristics, context)
         
-        # Track topic exploration
-        if topic not in self.learning_log["topics_explored"]:
-            self.learning_log["topics_explored"][topic] = 0
-        self.learning_log["topics_explored"][topic] += 1
+        # Generate the message
+        model, tokenizer = self.get_model()
         
-        # Create learning activity
-        activity = {
-            "interest": interest,
-            "topic": topic,
-            "timestamp": datetime.now().isoformat(),
-            "learning_method": random.choice(["internet_search", "asking_parent", "observation", "connection_making"]),
-            "complexity": min(0.3 + (persona.age * 0.05) + (random.random() * 0.2), 0.9)
-        }
+        # Tokenize and generate
+        input_ids = tokenizer.encode(prompt, return_tensors="pt").to(model.device)
         
-        # Add to learning log
-        self.learning_log["learning_events"].append(activity)
-        self.learning_log["daily_learning_count"] += 1
-        self.learning_log["last_learning_time"] = activity["timestamp"]
+        # Temperature based on personality expressiveness
+        temperature = 0.7 + (persona.personality.expressiveness * 0.2)
         
-        # Keep learning events manageable
-        if len(self.learning_log["learning_events"]) > 100:
-            self.learning_log["learning_events"] = self.learning_log["learning_events"][-100:]
+        # Generate with appropriate parameters
+        output = model.generate(
+            input_ids, 
+            max_new_tokens=150, 
+            do_sample=True, 
+            temperature=temperature,
+            top_p=0.92
+        )
         
-        self._save_learning_log()
+        # Decode the generated message
+        generated = tokenizer.decode(output[0], skip_special_tokens=True)
         
-        return activity
+        # Clean up the message and add child-like elements
+        message = self._process_generated_text(generated, characteristics)
+        
+        # Log interaction for developmental tracking
+        if "parent_message" in context:
+            sentiment = self._estimate_message_sentiment(message)
+            self.persona_manager.add_parent_interaction(
+                interaction_type="response",
+                content=message,
+                sentiment=sentiment
+            )
+            
+        return message
     
-    async def status_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /status command"""
-        try:
-            persona = self.persona_manager.persona
-            sleep_status = self.persona_manager.is_sleeping()
+    def _build_message_prompt(self, trigger: str, characteristics: Dict[str, Any], 
+                             context: Dict[str, Any]) -> str:
+        """
+        Build a prompt for message generation
+        
+        Args:
+            trigger: Type of message to generate
+            characteristics: Response characteristics from developmental model
+            context: Additional context for generation
             
-            # Format status message
-            status_text = f"📊 {persona.name}'s Status\n\n"
-            
-            if sleep_status:
-                status_text += f"😴 {persona.name} is currently sleeping. The usual wake time is {persona.sleep_schedule.waketime}.\n\n"
+        Returns:
+            Prompt string to feed to the language model
+        """
+        persona = self.persona_manager.persona
+        
+        # Base prompt with persona information
+        prompt = f"""
+You are roleplaying as {persona.name}, a {persona.age}-year-old {persona.gender} child.
+
+{persona.name}'s personality:
+- Curiosity: {'Very curious' if persona.personality.curiosity > 0.7 else 'Moderately curious'}
+- Energy level: {'Very energetic' if persona.personality.energy > 0.7 else 'Moderately energetic'}
+- Imagination: {'Highly imaginative' if persona.personality.imagination > 0.7 else 'Has a good imagination'}
+- Expressiveness: {'Very expressive' if persona.personality.expressiveness > 0.7 else 'Expresses feelings clearly'}
+
+{persona.name}'s interests include: {', '.join(persona.interests)}.
+
+{persona.name}'s developmental level:
+- Vocabulary size: around {characteristics['vocabulary_range']} words
+- Sentence complexity: {self._translate_complexity_to_text(characteristics['complexity'])}
+- Grammar accuracy: {self._translate_complexity_to_text(characteristics['grammar_accuracy'])}
+- Abstract thinking: {self._translate_complexity_to_text(characteristics['abstract_thinking'])}
+
+"""
+
+        # Add specific context based on trigger type
+        if trigger == "greeting":
+            prompt += f"""
+{persona.name} is greeting their parent with excitement and energy. 
+{persona.name} might mention something they're excited about or a recent discovery.
+
+Generate {persona.name}'s greeting message:
+"""
+        elif trigger == "question":
+            prompt += f"""
+{persona.name} is curious about something and wants to ask their parent about it.
+{persona.name}'s question is about: {context.get('topic', 'something interesting')}.
+
+Generate {persona.name}'s question message:
+"""
+        elif trigger == "response":
+            parent_message = context.get('parent_message', '')
+            prompt += f"""
+{persona.name} is responding to their parent's message:
+"{parent_message}"
+
+{persona.name}'s response should be natural and reflect their personality and development level.
+
+Generate {persona.name}'s response:
+"""
+        elif trigger == "learning":
+            learning = context.get('learning', 'something interesting')
+            prompt += f"""
+{persona.name} just learned about {learning} and wants to share this with their parent.
+{persona.name} is excited about this new knowledge and wants to tell them what they learned.
+
+Generate {persona.name}'s message about this new learning:
+"""
+        elif trigger == "bored":
+            prompt += f"""
+{persona.name} is feeling a bit bored and reaching out to their parent.
+{persona.name} might ask for something to do or suggest an activity they'd like to do together.
+
+Generate {persona.name}'s message:
+"""
+        elif trigger == "nightmare":
+            prompt += f"""
+{persona.name} had a scary dream/nightmare and is messaging their parent about it.
+{persona.name} is a bit upset and seeking comfort.
+
+Generate {persona.name}'s message about the nightmare:
+"""
+        else:  # general message
+            prompt += f"""
+{persona.name} wants to chat with their parent about something on their mind.
+{persona.name}'s message should reflect their personality, interests, and developmental level.
+
+Generate {persona.name}'s message:
+"""
+        
+        # Add language preference if specified
+        if "language" in context:
+            if context["language"].lower() == "polish":
+                prompt += "\nPlease generate the message in Polish language."
             else:
-                # Add mood information
-                moods = []
-                for emotion, value in persona.emotional_state.items():
-                    if value > 0.7:
-                        moods.append(f"very {emotion}")
-                    elif value > 0.4:
-                        moods.append(f"{emotion}")
-                
-                if moods:
-                    status_text += f"😊 Current mood: {', '.join(moods)}\n\n"
-                
-                # Add recent learning
-                if persona.recent_learnings:
-                    recent = persona.recent_learnings[-1]
-                    status_text += f"🧠 Recently learned about: {recent['topic']}\n\n"
-                
-                # Add development info
-                dev_state = self.dev_model.state
-                status_text += (
-                    f"📈 Development:\n"
-                    f"- Vocabulary: ~{dev_state['language_development']['vocabulary_size']} words\n"
-                    f"- Attention span: ~{int(dev_state['cognitive_development']['attention_span_minutes'])} minutes\n"
-                )
-            
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=status_text
-            )
+                prompt += "\nPlease generate the message in English language."
         
-        except Exception as e:
-            self.logger.error(f"Error in status command: {e}")
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text="Sorry, I couldn't get the status right now."
-            )
+        return prompt
     
-    async def goodnight_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /goodnight command"""
+    def _process_generated_text(self, text: str, characteristics: Dict[str, Any]) -> str:
+        """
+        Process generated text to make it more child-like based on development
+        
+        Args:
+            text: The raw generated text
+            characteristics: The response characteristics
+            
+        Returns:
+            Processed text with child-like features
+        """
         persona = self.persona_manager.persona
         
-        # Update emotional state for bedtime
-        self.persona_manager.update_emotional_state({"tiredness": 0.8})
+        # Remove any non-message content (like prompt echoing)
+        lines = text.split('\n')
+        for i, line in enumerate(lines):
+            if ':' in line and i < len(lines) - 1:
+                # This might be a dialog format like "Child: message"
+                # Take everything after this point
+                text = '\n'.join(lines[i:])
+                break
         
-        # Generate goodnight message
-        goodnight_messages = [
-            f"*yawns* Goodnight! 😴 I'm sleepy too...",
-            f"Goodnight! Sweet dreams! 💤",
-            f"Time for bed? Okay... *yawns* Goodnight!",
-            f"*cuddles favorite stuffed animal* Nighty night!",
-            f"Goodnight! Can you check for monsters under the bed? Just kidding! 😊"
+        # Remove any name prefixes
+        text = re.sub(f"{persona.name}:", "", text)
+        text = re.sub(r"^[A-Za-z]+:", "", text)
+        
+        # Clean up the text
+        text = text.strip()
+        
+        # Add child-like modifications based on age and personality
+        if persona.age <= 8:
+            # Younger children may use more simple punctuation
+            if random.random() < 0.3:
+                text = self._simplify_punctuation(text)
+            
+            # Younger children may use more emojis
+            if random.random() < 0.4:
+                text = self._add_emojis(text)
+            
+            # Occasionally introduce minor spelling error for younger children
+            # but only if grammar accuracy is not too high
+            if random.random() < 0.2 and characteristics["grammar_accuracy"] < 0.8:
+                text = self._introduce_spelling_error(text)
+        
+        # Add characteristic expressions
+        if characteristics["favorite_expressions"] and random.random() < 0.3:
+            expression = random.choice(characteristics["favorite_expressions"])
+            if random.random() < 0.5 and not text.endswith(("!", "?", ".")):
+                text += f" {expression}"
+            elif random.random() < 0.3:
+                text = f"{expression} {text}"
+        
+        return text
+    
+    def _simplify_punctuation(self, text: str) -> str:
+        """
+        Simplify punctuation to be more child-like
+        
+        Args:
+            text: Original text
+            
+        Returns:
+            Text with child-like punctuation
+        """
+        # Sometimes use multiple exclamation marks
+        if "!" in text and random.random() < 0.5:
+            text = re.sub(r"!", "!!" if random.random() < 0.5 else "!!!", text)
+        
+        # Sometimes use multiple question marks
+        if "?" in text and random.random() < 0.4:
+            text = re.sub(r"\?", "??" if random.random() < 0.7 else "???", text)
+        
+        return text
+    
+    def _add_emojis(self, text: str) -> str:
+        """
+        Add child-appropriate emojis to text
+        
+        Args:
+            text: Original text
+            
+        Returns:
+            Text with added emojis
+        """
+        child_emojis = [
+            "😊", "😃", "😄", "🙂", "😁", "🤗", "🤔", "😮", "😎", "🌟", 
+            "✨", "🐱", "🐶", "🦄", "🌈", "🍦", "🍭", "🎨", "📚", "🚀"
         ]
         
-        message = random.choice(goodnight_messages)
+        # Add emoji at the end
+        if random.random() < 0.6 and not text.endswith(tuple(child_emojis)):
+            text += f" {random.choice(child_emojis)}"
         
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=message
-        )
+        # Sometimes add emoji mid-sentence
+        if len(text) > 30 and random.random() < 0.3:
+            sentences = re.split(r'([.!?] )', text)
+            if len(sentences) > 2:
+                insert_point = random.randrange(0, len(sentences) - 1, 2)
+                sentences.insert(insert_point + 1, f" {random.choice(child_emojis)} ")
+                text = ''.join(sentences)
+        
+        return text
     
-    async def goodmorning_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle the /goodmorning command"""
+    def _introduce_spelling_error(self, text: str) -> str:
+        """
+        Introduce a minor, realistic child-like spelling error
+        
+        Args:
+            text: Original text
+            
+        Returns:
+            Text with a minor spelling error
+        """
+        words = text.split()
+        if len(words) < 3:
+            return text
+            
+        # Select a word to modify (avoid very short words)
+        eligible_words = [i for i, word in enumerate(words) if len(word) > 3 
+                         and word.isalpha() and i > 0]
+        
+        if not eligible_words:
+            return text
+            
+        word_index = random.choice(eligible_words)
+        word = words[word_index]
+        
+        # Choose error type
+        error_type = random.choice(["swap", "double", "omit"])
+        
+        if error_type == "swap" and len(word) > 4:
+            # Swap two adjacent letters
+            pos = random.randint(0, len(word) - 2)
+            new_word = word[:pos] + word[pos+1] + word[pos] + word[pos+2:]
+        elif error_type == "double" and len(word) > 3:
+            # Double a letter
+            pos = random.randint(0, len(word) - 1)
+            new_word = word[:pos] + word[pos] * 2 + word[pos+1:]
+        else:
+            # Omit a letter
+            pos = random.randint(1, len(word) - 2)  # Avoid first/last letter for readability
+            new_word = word[:pos] + word[pos+1:]
+            
+        words[word_index] = new_word
+        return ' '.join(words)
+    
+    def _translate_complexity_to_text(self, complexity: float) -> str:
+        """
+        Translate a complexity value to descriptive text
+        
+        Args:
+            complexity: Value between 0.0 and 1.0
+            
+        Returns:
+            Descriptive text of the complexity level
+        """
+        if complexity < 0.3:
+            return "basic"
+        elif complexity < 0.5:
+            return "developing"
+        elif complexity < 0.7:
+            return "intermediate"
+        elif complexity < 0.85:
+            return "advanced"
+        else:
+            return "very advanced"
+    
+    def _generate_sleeping_response(self) -> str:
+        """
+        Generate a response indicating the child is sleeping
+        
+        Returns:
+            Message indicating the child is sleeping
+        """
         persona = self.persona_manager.persona
         
-        # Update emotional state for morning
-        self.persona_manager.update_emotional_state({
-            "tiredness": 0.2,
-            "happiness": 0.8,
-            "excitement": 0.7
-        })
+        responses = [
+            f"{persona.name} is currently sleeping. Bedtime is at {persona.sleep_schedule.bedtime} and wake time is around {persona.sleep_schedule.waketime}.",
+            f"Shh! {persona.name} is sleeping right now. Children need their rest! Try again after {persona.sleep_schedule.waketime}.",
+            f"{persona.name} is dreaming right now. You can talk to her again when she wakes up at around {persona.sleep_schedule.waketime}."
+        ]
         
-        # Generate morning message
-        morning_context = {"time_of_day": "morning"}
-        greeting = self.message_generator.generate_message(morning_context, "greeting")
-        
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=greeting
-        )
+        return random.choice(responses)
     
-    async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle incoming text messages"""
-        # Update state
-        self.last_message_time = datetime.now()
-        self.conversation_active = True
+    def _estimate_message_sentiment(self, message: str) -> float:
+        """
+        Estimate the sentiment of a message (simple heuristic)
         
-        message_text = update.message.text
+        Args:
+            message: The message text
+            
+        Returns:
+            Sentiment value between 0.0 and 1.0
+        """
+        # Simple keyword based sentiment analysis
+        positive_words = [
+            "happy", "love", "wonderful", "great", "awesome", "fun", "exciting",
+            "good", "nice", "cool", "amazing", "thank", "please", "smile", "laugh",
+            "wesoły", "kocham", "wspaniały", "świetny", "fajny", "zabawa", "dobry",
+            "miły", "super", "dziękuję", "proszę", "uśmiech", "śmiech", "radość"
+        ]
         
-        # Check if child is sleeping
+        negative_words = [
+            "sad", "bad", "angry", "upset", "scared", "afraid", "worried", "hate",
+            "boring", "mean", "cry", "hurt", "smutny", "zły", "przestraszony",
+            "boję", "zmartwiony", "nienawidzę", "nudny", "płacz", "boli"
+        ]
+        
+        # Count occurrences
+        positive_count = sum(1 for word in positive_words if word.lower() in message.lower())
+        negative_count = sum(1 for word in negative_words if word.lower() in message.lower())
+        
+        # Calculate sentiment score (0.5 is neutral)
+        total = positive_count + negative_count
+        if total == 0:
+            return 0.5
+            
+        sentiment = 0.5 + ((positive_count - negative_count) / (total * 2))
+        return max(0.0, min(1.0, sentiment))
+    
+    def generate_conversation_starter(self, trigger_type: str = None) -> str:
+        """
+        Generate a conversation starter based on the child's persona and state
+        
+        Args:
+            trigger_type: Optional trigger type to use
+            
+        Returns:
+            Generated conversation starter or None if not appropriate
+        """
+        persona = self.persona_manager.persona
+        
+        # Check if child would be sleeping
         if self.persona_manager.is_sleeping():
-            sleeping_response = self.message_generator._generate_sleeping_response()
-            await context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=sleeping_response
-            )
-            return
+            return None  # Don't initiate conversation while sleeping
         
-        # Detect language (simplified version)
-        language = "english"
-        polish_indicators = ["ą", "ę", "ó", "ś", "ć", "ż", "ź", "ń", "czy", "jest", "mam", "lubię"]
-        if any(indicator in message_text.lower() for indicator in polish_indicators):
-            language = "polish"
-        
-        # Prepare message context
-        context = {
-            "parent_message": message_text,
-            "language": language
-        }
-        
-        # If message looks like a question, try to learn from it
-        if "?" in message_text:
-            # Trigger a learning event if it's a question
-            asyncio.create_task(self._process_learning_from_question(message_text))
-        
-        # Generate response
-        response = self.message_generator.generate_message(context, "response")
-        
-        # Record interaction
-        sentiment = self.message_generator._estimate_message_sentiment(message_text)
-        self.persona_manager.add_parent_interaction("message", message_text, sentiment)
-        
-        # Process interaction for development
-        self.dev_model.process_interaction("conversation", message_text, sentiment)
-        
-        # Send response (add typing indicator for realism)
-        await context.bot.send_chat_action(
-            chat_id=update.effective_chat.id,
-            action="typing"
-        )
-        
-        # Delay based on message length (children don't type instantly)
-        typing_delay = min(len(response) * 0.05, C] / 4.0
-        await asyncio.sleep(typing_delay)
-        
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text=response
-        )
-    
-    async def error_handler(self, update, context):
-        """Handle errors in the bot"""
-        self.logger.error(f"Error: {context.error} in update {update}")
-    
-    async def _process_learning_from_question(self, question: str):
-        """Process potential learning from a parent's question"""
-        try:
-            # If it's a knowledge question, try to learn from it
-            if any(term in question.lower() for term in ["what is", "how does", "why do", "tell me about"]):
-                # Extract topic from question
-                topic = question.replace("?", "").strip()
-                topic = re.sub(r'^(what is|how does|why do|tell me about)\s+', '', topic, flags=re.IGNORECASE)
-                
-                # Simulate learning response
-                search_result = await self.learning_engine._mock_search_results(topic)
-                
-                if search_result["status"] == "success":
-                    # Add to learnings
-                    self.persona_manager.add_learning(
-                        topic=topic,
-                        content=search_result["summary"],
-                        source="parent_explanation"
-                    )
-                    
-                    # Process as developmental event
-                    self.dev_model.process_learning_event(topic, 0.8)
-        except Exception as e:
-            self.logger.error(f"Error processing learning from question: {e}")
-    
-    async def start_bot(self):
-        """Start the Telegram bot"""
-        if not self.app:
-            self.logger.warning("Cannot start bot: No token provided")
-            return False
-        
-        try:
-            # Start the bot
-            await self.app.initialize()
-            await self.app.start()
-            await self.app.updater.start_polling()
+        # Determine trigger type if not specified
+        if trigger_type is None:
+            # Default distribution of conversation starters
+            triggers = [
+                ("learning", 0.3),      # Sharing something learned
+                ("question", 0.25),     # Asking a question
+                ("greeting", 0.15),     # Simple greeting
+                ("bored", 0.15),        # Feeling bored
+                ("general", 0.15)       # General chat
+            ]
             
-            # Start initiative task
-            asyncio.create_task(self._run_initiative_loop())
-            
-            self.logger.info(f"Bot started for {self.persona_manager.persona.name}")
-            return True
-        except Exception as e:
-            self.logger.error(f"Error starting bot: {e}")
-            return False
-    
-    async def stop_bot(self):
-        """Stop the Telegram bot"""
-        if self.app:
-            await self.app.stop()
-            await self.app.shutdown()
-    
-    async def send_initiative_message(self, message: str):
-        """Send a message initiated by the child"""
-        if not self.app or not self.chat_id:
-            return False
-        
-        try:
-            # Send typing indicator for realism
-            await self.app.bot.send_chat_action(
-                chat_id=self.chat_id,
-                action="typing"
-            )
-            
-            # Delay based on message length (children don't type instantly)
-            typing_delay = min(len(message) * 0.05, 4.0)
-            await asyncio.sleep(typing_delay)
-            
-            # Send message
-            await self.app.bot.send_message(
-                chat_id=self.chat_id,
-                text=message
-            )
-            
-            # Update initiative time
-            self.last_initiative_time = datetime.now()
-            
-            return True
-        except Exception as e:
-            self.logger.error(f"Error sending initiative message: {e}")
-            return False
-    
-    async def _run_initiative_loop(self):
-        """Run a loop that occasionally initiates conversation"""
-        while True:
-            try:
-                # Wait between initiative checks
-                await asyncio.sleep(300)  # Check every 5 minutes
+            # Adjust probabilities based on emotional state
+            if "tiredness" in persona.emotional_state and persona.emotional_state["tiredness"] > 0.7:
+                # Less likely to start conversations when tired
+                return None if random.random() < 0.7 else self.generate_message({"topic": "being tired"}, "general")
                 
-                # Skip if child is sleeping
-                if self.persona_manager.is_sleeping():
-                    continue
-                
-                # Don't initiate if conversation is already active
-                time_since_last_message = (datetime.now() - self.last_message_time).total_seconds()
-                if time_since_last_message < 1800:  # 30 minutes
-                    self.conversation_active = True
-                else:
-                    self.conversation_active = False
-                
-                # Don't initiate too frequently
-                time_since_last_initiative = (datetime.now() - self.last_initiative_time).total_seconds()
-                if time_since_last_initiative < 7200:  # 2 hours minimum between initiatives
-                    continue
-                
-                # Random chance to initiate (higher when not in active conversation)
-                initiative_chance = 0.05  # 5% chance every 5 minutes when conversation inactive
-                if self.conversation_active:
-                    initiative_chance = 0.01  # 1% chance when conversation active
-                
-                if random.random() < initiative_chance:
-                    # Decide on initiative type
-                    initiative_type = self._decide_initiative_type()
-                    
-                    # Generate message based on type
-                    message = self.message_generator.generate_conversation_starter(initiative_type)
-                    
-                    if message:
-                        await self.send_initiative_message(message)
+            if "excitement" in persona.emotional_state and persona.emotional_state["excitement"] > 0.8:
+                # More likely to share learning when excited
+                triggers = [("learning", 0.5), ("question", 0.2), ("greeting", 0.2), ("general", 0.1)]
             
-            except Exception as e:
-                self.logger.error(f"Error in initiative loop: {e}")
-                await asyncio.sleep(300)  # Wait before retrying
-    
-    def _decide_initiative_type(self) -> str:
-        """Decide what type of initiative to take"""
-        persona = self.persona_manager.persona
+            # Weighted random selection
+            total = sum(weight for _, weight in triggers)
+            r = random.uniform(0, total)
+            upto = 0
+            for trigger, weight in triggers:
+                upto += weight
+                if upto >= r:
+                    trigger_type = trigger
+                    break
         
-        # Check for recent learnings to share
-        if persona.recent_learnings and random.random() < 0.4:
-            return "learning"
+        # Context based on trigger type
+        context = {}
         
-        # Check emotional state for special triggers
-        if "boredom" in persona.emotional_state and persona.emotional_state["boredom"] > 0.7:
-            return "bored"
+        if trigger_type == "learning":
+            # Get a recent learning to share
+            if persona.recent_learnings:
+                learning = random.choice(persona.recent_learnings)
+                context["learning"] = learning["topic"]
+                context["details"] = learning["content"]
+            else:
+                # Default learning topics if none available
+                topics = ["animals", "space", "a cool fact", "something at school"]
+                context["learning"] = random.choice(topics)
         
-        if random.random() < 0.3:
-            return "question"
+        elif trigger_type == "question":
+            # Generate a question about an interest
+            context["topic"] = random.choice(persona.interests)
         
-        return "general"
+        # Set language randomly if bilingual
+        if len(persona.languages) > 1:
+            context["language"] = random.choice(persona.languages)
+        
+        # Get response characteristics
+        context["response_characteristics"] = self.dev_model._calculate_response_characteristics("")
+        
+        # Generate the message
+        return self.generate_message(context, trigger_type)

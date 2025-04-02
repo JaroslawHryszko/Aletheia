@@ -1,4 +1,10 @@
-# aletheia/young/integration.py
+"""
+Integration Module for Young Aletheia
+
+This module integrates Young Aletheia functionality into the main Aletheia system,
+coordinating the various components and managing background tasks.
+"""
+
 from typing import Dict, Any, Optional
 from fastapi import FastAPI
 import asyncio
@@ -8,13 +14,18 @@ import random
 import re
 
 from aletheia.config import CONFIG
-from aletheia.core.cognitive_architecture import init_cognitive_state
 from aletheia.utils.logging import log_event
 
 class YoungAletheiaIntegration:
     """Integrates Young Aletheia functionality into the main Aletheia system"""
     
-    def __init__(self, app: FastAPI = None):
+    def __init__(self, app: Optional[FastAPI] = None):
+        """
+        Initialize the Young Aletheia integration
+        
+        Args:
+            app: Optional FastAPI application to integrate with
+        """
         # Base paths
         self.base_dir = Path(__file__).resolve().parent
         self.data_dir = self.base_dir / "data"
@@ -33,10 +44,10 @@ class YoungAletheiaIntegration:
     
     def _init_components(self):
         """Initialize all child components"""
-        from aletheia.young.persona import PersonaManager
-        from aletheia.young.developmental_model import DevelopmentalModel
-        from aletheia.young.message_generator import ChildMessageGenerator
-        from aletheia.young.learning_engine import LearningEngine
+        from young_aletheia.persona import PersonaManager
+        from young_aletheia.developmental_model import DevelopmentalModel
+        from young_aletheia.message_generator import ChildMessageGenerator
+        from young_aletheia.learning_engine import LearningEngine
         
         # Initialize in order (with dependencies)
         self.persona_manager = PersonaManager(self.data_dir)
@@ -45,7 +56,7 @@ class YoungAletheiaIntegration:
         self.learning_engine = LearningEngine(self.persona_manager, self.dev_model, self.data_dir)
         
         # Initialize telegram bot if configuration exists
-        from aletheia.young.telegram_bot import YoungAletheiaTelegramBot
+        from young_aletheia.telegram_bot import YoungAletheiaTelegramBot
         self.telegram_bot = YoungAletheiaTelegramBot(
             CONFIG,
             self.persona_manager,
@@ -55,8 +66,13 @@ class YoungAletheiaIntegration:
         )
     
     def add_to_app(self, app: FastAPI):
-        """Add Young Aletheia to the FastAPI application"""
-        from aletheia.young.interface import YoungAletheiaRouter
+        """
+        Add Young Aletheia to the FastAPI application
+        
+        Args:
+            app: FastAPI application instance
+        """
+        from young_aletheia.interface import YoungAletheiaRouter
         
         # Create and setup router
         self.interface = YoungAletheiaRouter(

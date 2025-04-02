@@ -1,5 +1,11 @@
-# aletheia/young/developmental_model.py
-from typing import Dict, Any, List, Tuple
+"""
+Developmental Model for Young Aletheia
+
+This module models the child's cognitive and emotional development over time,
+tracking progress in language, reasoning, and emotional capabilities.
+"""
+
+from typing import Dict, Any, List, Tuple, Optional
 import random
 import math
 from datetime import datetime, timedelta
@@ -10,6 +16,13 @@ class DevelopmentalModel:
     """Models the child's cognitive and emotional development over time"""
     
     def __init__(self, persona_manager, data_dir: Path):
+        """
+        Initialize the developmental model
+        
+        Args:
+            persona_manager: The persona manager instance
+            data_dir: Directory for storing developmental data
+        """
         self.persona_manager = persona_manager
         self.data_dir = data_dir
         self.dev_file = data_dir / "developmental_state.json"
@@ -19,7 +32,7 @@ class DevelopmentalModel:
         """Load the developmental state or create default"""
         if self.dev_file.exists():
             try:
-                with open(self.dev_file, "r") as f:
+                with open(self.dev_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception as e:
                 print(f"Error loading developmental state: {e}")
@@ -28,7 +41,7 @@ class DevelopmentalModel:
             return self._create_default_state()
     
     def _create_default_state(self) -> Dict[str, Any]:
-        """Create a default developmental state"""
+        """Create a default developmental state based on age and persona settings"""
         persona = self.persona_manager.persona
         
         # Calculate base complexity levels based on age and development
@@ -41,7 +54,8 @@ class DevelopmentalModel:
                 "sentence_complexity": base_speech_complexity,
                 "grammar_accuracy": base_speech_complexity * 0.9,
                 "bilingual_balance": 0.7 if len(persona.languages) > 1 else 1.0,
-                "favorite_expressions": ["super!", "why?", "I'm thinking...", "can you explain?"]
+                "favorite_expressions": ["super!", "why?", "I'm thinking...", "can you explain?", 
+                                        "cool!", "let me see...", "I know!"]
             },
             "cognitive_development": {
                 "attention_span_minutes": 5 + int(persona.age * 2 * persona.development.cognitive),
@@ -79,7 +93,7 @@ class DevelopmentalModel:
         self._save_state(state)
         return state
     
-    def _save_state(self, state: Dict[str, Any] = None) -> None:
+    def _save_state(self, state: Optional[Dict[str, Any]] = None) -> None:
         """Save the developmental state to file"""
         if state is not None:
             self.state = state
@@ -87,11 +101,17 @@ class DevelopmentalModel:
         self.state["last_updated"] = datetime.now().isoformat()
         self.data_dir.mkdir(parents=True, exist_ok=True)
         
-        with open(self.dev_file, "w") as f:
-            json.dump(self.state, f, indent=2)
+        with open(self.dev_file, "w", encoding="utf-8") as f:
+            json.dump(self.state, f, indent=2, ensure_ascii=False)
     
     def process_learning_event(self, topic: str, complexity: float) -> None:
-        """Process a learning event and update developmental state"""
+        """
+        Process a learning event and update developmental state
+        
+        Args:
+            topic: The topic being learned
+            complexity: How complex/advanced the learning is (0.0-1.0)
+        """
         # Update learning stats
         self.state["learning_stats"]["total_learnings"] += 1
         
@@ -120,7 +140,17 @@ class DevelopmentalModel:
     
     def process_interaction(self, interaction_type: str, content: str, 
                            sentiment: float) -> Dict[str, Any]:
-        """Process an interaction with a parent and update state"""
+        """
+        Process an interaction with a parent and update state
+        
+        Args:
+            interaction_type: Type of interaction (e.g., "conversation", "question")
+            content: The content of the interaction
+            sentiment: The emotional sentiment (-1.0 to 1.0)
+            
+        Returns:
+            Dict with appropriate response characteristics
+        """
         # Update interaction patterns
         self.state["interaction_patterns"]["daily_interactions"] += 1
         
@@ -137,7 +167,15 @@ class DevelopmentalModel:
         return response_characteristics
     
     def _calculate_response_characteristics(self, content: str) -> Dict[str, Any]:
-        """Calculate appropriate response characteristics based on development"""
+        """
+        Calculate appropriate response characteristics based on development
+        
+        Args:
+            content: The content to respond to
+            
+        Returns:
+            Dict with characteristics to guide response generation
+        """
         persona = self.persona_manager.persona
         lang = self.state["language_development"]
         cognitive = self.state["cognitive_development"]
@@ -186,7 +224,12 @@ class DevelopmentalModel:
         }
     
     def simulate_daily_development(self) -> Dict[str, Any]:
-        """Simulate small developmental changes that would occur daily"""
+        """
+        Simulate small developmental changes that would occur daily
+        
+        Returns:
+            Dict with summary of changes
+        """
         persona = self.persona_manager.persona
         
         # Small incremental improvements

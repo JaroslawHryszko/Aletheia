@@ -1,12 +1,19 @@
-# aletheia/young/persona.py
+"""
+PersonaManager for Young Aletheia
+
+This module manages the persona of the child in the Young Aletheia system,
+including personality traits, interests, and development level.
+"""
+
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 from datetime import time, datetime, timedelta
 import json
 from pathlib import Path
-import pytz
+import re
 
 class PersonalityTraits(BaseModel):
+    """Personality traits of the child with values from 0.0 to 1.0"""
     curiosity: float = Field(0.8, ge=0.0, le=1.0, description="Level of curiosity about the world")
     energy: float = Field(0.9, ge=0.0, le=1.0, description="Energy level and activity")
     imagination: float = Field(0.9, ge=0.0, le=1.0, description="Creativity and imaginative thinking")
@@ -15,12 +22,14 @@ class PersonalityTraits(BaseModel):
     attentiveness: float = Field(0.7, ge=0.0, le=1.0, description="Ability to focus and pay attention")
 
 class DevelopmentLevel(BaseModel):
+    """Development level of the child relative to age with values from 0.0 to 1.0"""
     cognitive: float = Field(0.8, ge=0.0, le=1.0, description="Cognitive development relative to age")
     vocabulary: float = Field(0.8, ge=0.0, le=1.0, description="Vocabulary size and usage relative to age")
     emotional: float = Field(0.7, ge=0.0, le=1.0, description="Emotional intelligence and regulation")
     social: float = Field(0.7, ge=0.0, le=1.0, description="Social skills and understanding")
 
 class SleepSchedule(BaseModel):
+    """Sleep schedule for the child"""
     bedtime: str = Field("20:30", description="Usual bedtime (HH:MM)")
     waketime: str = Field("07:00", description="Usual wake time (HH:MM)")
     naps: bool = Field(False, description="Whether the child takes naps")
@@ -38,6 +47,7 @@ class SleepSchedule(BaseModel):
             return now >= bedtime and now < waketime
 
 class ChildPersona(BaseModel):
+    """Complete persona of the child"""
     name: str = Field("Zosia", description="Child's name")
     age: int = Field(7, ge=1, le=12, description="Child's age in years")
     gender: str = Field("female", description="Child's gender identity")
@@ -56,11 +66,12 @@ class ChildPersona(BaseModel):
             "attachment": 0.9,
             "trust": 0.9,
             "recent_interactions": [],
-            "parent_names": {"mom": "Mama", "dad": "Tata"}
+            "parent_names": {"mom": "Mom", "dad": "Dad"}
         }
     )
     
     class Config:
+        """Example configuration for documentation"""
         schema_extra = {
             "example": {
                 "name": "Zosia",
@@ -98,12 +109,15 @@ class PersonaManager:
         self.data_dir = data_dir
         self.persona_file = data_dir / "young_aletheia_persona.json"
         self.persona = self._load_persona()
+        
+        # Ensure data directory exists
+        self.data_dir.mkdir(parents=True, exist_ok=True)
     
     def _load_persona(self) -> ChildPersona:
         """Load the child persona from file or create default"""
         if self.persona_file.exists():
             try:
-                with open(self.persona_file, "r") as f:
+                with open(self.persona_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 return ChildPersona(**data)
             except Exception as e:
@@ -156,8 +170,8 @@ class PersonaManager:
             self.persona = persona
             
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        with open(self.persona_file, "w") as f:
-            json.dump(self.persona.dict(), f, indent=2)
+        with open(self.persona_file, "w", encoding="utf-8") as f:
+            json.dump(self.persona.dict(), f, indent=2, ensure_ascii=False)
     
     def update_persona(self, updates: Dict[str, Any]) -> ChildPersona:
         """Update specific fields in the persona"""
