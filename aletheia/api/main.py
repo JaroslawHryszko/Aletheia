@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from aletheia.config import CONFIG
+from aletheia.young_aletheia import initialize_young_aletheia
 
 from aletheia.api.routes import (
     thoughts,
@@ -38,7 +39,6 @@ app.include_router(telegram_webhook.router, prefix="/telegram-webhook", tags=["I
 
 # === Initialize Young Aletheia if enabled ===
 if CONFIG.get("YOUNG_ALETHEIA_ENABLED", True):
-    from aletheia.young_aletheia import initialize_young_aletheia
     young_aletheia = initialize_young_aletheia(app)
 
  

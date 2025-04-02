@@ -16,6 +16,7 @@ from aletheia.core.concept_evolution import init_concept_system
 from aletheia.core.dynamic_prompt import init_prompt_system
 from aletheia.utils.logging import log_event
 from aletheia.config import CONFIG
+from aletheia.young_aletheia import initialize_young_aletheia
 
 def setup_environment():
     """Setup the environment for Aletheia"""
@@ -132,6 +133,18 @@ def run_scheduler():
     except Exception as e:
         print(f"❌ Scheduler error: {e}")
         sys.exit(1)
+        
+def run_young_aletheia():
+    """Run the Young Aletheia"""
+    try:
+        if CONFIG.get("YOUNG_ALETHEIA_ENABLED", True):
+            print("\n Starting Young Aletheia...")
+            young_aletheia = initialize_young_aletheia()
+    except KeyboardInterrupt:
+        print("\n⏹️ Young Aletheia stopped by user")
+    except Exception as e:
+        print(f"❌ Young Aletheia error: {e}")
+        sys.exit(1)
 
 def create_snapshot():
     """Create a snapshot of the current cognitive state"""
@@ -196,16 +209,6 @@ def main():
 
     # Show banner
     show_banner()
-
-    # Setup environment if needed or requested
-    if args.setup or args.all:
-        setup_environment()
-
-    # Create snapshot if requested
-    if args.snapshot:
-        create_snapshot()
-        return
-
     # Run components based on arguments
     if args.all:
         # Start all processes
@@ -213,45 +216,29 @@ def main():
         try:
             import multiprocessing
             server_process = multiprocessing.Process(target=run_web_server)
-            server_process.start()
-            
+            server_process.start()           
             # Give the server time to start
             time.sleep(2)
-            
-            # Start panel in a separate process
-            panel_process = multiprocessing.Process(target=run_consciousness_panel)
-            panel_process.start()
-            
+            run_young_aletheia()
             # Run scheduler (main process)
-            run_scheduler()
-            
-            if CONFIG.get("YOUNG_ALETHEIA_ENABLED", True):
-                # Initialize Young Aletheia
-                from aletheia.young_aletheia import initialize_young_aletheia
-                young_aletheia = initialize_young_aletheia()
-            
+            run_scheduler()        
         except KeyboardInterrupt:
             print("\n⏹️ Stopping all processes...")
             try:
                 server_process.terminate()
+                # Give the server time to start
+                time.sleep(2)
                 panel_process.terminate()
             except:
                 pass
-        return
     elif args.young:
-        # Run Young Aletheia specific CLI
-        print("Starting Young Aletheia CLI...")
-        from aletheia.young_aletheia import initialize_young_aletheia
-        young_aletheia = initialize_young_aletheia()
-        # Keep process running
+            run_young_aletheia()
         try:
             while True:
                 time.sleep(1)
         except KeyboardInterrupt:
             print("\n⏹️ Young Aletheia stopped by user")
-    
-    # Run individual components
-    if args.server:
+    elif args.server:
         run_web_server()
     elif args.scheduler:
         run_scheduler()
@@ -259,6 +246,10 @@ def main():
         run_cli()
     elif args.panel:
         run_consciousness_panel()
+    elif args.setup or args.all:
+        setup_environment()
+    elif args.snapshot:
+        create_snapshot()
     else:
         # No specific component was selected, show help
         parser.print_help()
