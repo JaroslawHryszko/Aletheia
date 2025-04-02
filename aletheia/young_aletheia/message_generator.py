@@ -86,6 +86,8 @@ class ChildMessageGenerator:
         # Decode the generated message
         message = tokenizer.decode(output[0], skip_special_tokens=True)
         
+        print(message)
+        
         # Clean up the message and add child-like elements
         if CONFIG.get("ADD_KID_STYLE", True):
             message = self._process_generated_text(message, characteristics)
