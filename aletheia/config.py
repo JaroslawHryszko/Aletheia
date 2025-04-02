@@ -26,13 +26,21 @@ CONFIG = {
     "GPT_MODEL": os.getenv("GPT_MODEL", "gpt-4"),
     "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY", ""),
 
-    # === Metadata ===
+    # === Identity ===
     "AGENT_NAME": os.getenv("AGENT_NAME", "Aletheia"),
+    "HUMAN_NAME": os.getenv("HUMAN_NAME", "User"),
     "ENVIRONMENT": os.getenv("ENVIRONMENT", "local"),
+    
+    # === Messenger Integration ===
+    "MESSENGER_TYPE": os.getenv("MESSENGER_TYPE", "telegram"),
+    "TELEGRAM_TOKEN": os.getenv("TELEGRAM_TOKEN", ""),
+    "CHAT_ID": os.getenv("CHAT_ID", ""),
     
     # === External APIs ===
     "NEWS_API_KEY": os.getenv("NEWS_API_KEY", ""),
     
     # === Young Aletheia ===
     "YOUNG_ALETHEIA_ENABLED": os.getenv("YOUNG_ALETHEIA_ENABLED", "true").lower() == "true",
+    "PARENT": os.getenv("PARENT", "Mom"),
+    
 }
