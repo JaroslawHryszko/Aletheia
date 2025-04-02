@@ -103,7 +103,6 @@ def run_web_server():
         )
     except ImportError as e:
         print(f"❌ Failed to start web server: {e}")
-        print("Please install required packages: pip install fastapi uvicorn")
         sys.exit(1)
 
 def run_cli():
@@ -228,7 +227,7 @@ def main():
             
             if CONFIG.get("YOUNG_ALETHEIA_ENABLED", True):
                 # Initialize Young Aletheia
-                from aletheia.young import initialize_young_aletheia
+                from aletheia.young_aletheia import initialize_young_aletheia
                 young_aletheia = initialize_young_aletheia()
             
         except KeyboardInterrupt:
@@ -242,7 +241,7 @@ def main():
     elif args.young:
         # Run Young Aletheia specific CLI
         print("Starting Young Aletheia CLI...")
-        from aletheia.young import initialize_young_aletheia
+        from aletheia.young_aletheia import initialize_young_aletheia
         young_aletheia = initialize_young_aletheia()
         # Keep process running
         try:
