@@ -16,12 +16,13 @@ from datetime import datetime
 import asyncio
 import random
 from pathlib import Path
+from aletheia.config import CONFIG
 
 class MessageRequest(BaseModel):
     """Request model for sending messages to the child"""
     content: str
     language: Optional[str] = "english"
-    parent_name: Optional[str] = None
+    parent_name: Optional[str] = CONFIG.get("HUMAN_NAME", "")
 
 class MessageResponse(BaseModel):
     """Response model for child messages"""

@@ -101,6 +101,8 @@ class ChildMessageGenerator:
                 sentiment=sentiment
             )
             
+        print(message)
+        
         return message
     
     def _build_message_prompt(self, trigger: str, characteristics: Dict[str, Any], 
