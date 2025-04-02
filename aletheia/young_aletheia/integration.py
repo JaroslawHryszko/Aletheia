@@ -44,10 +44,10 @@ class YoungAletheiaIntegration:
     
     def _init_components(self):
         """Initialize all child components"""
-        from young_aletheia.persona import PersonaManager
-        from young_aletheia.developmental_model import DevelopmentalModel
-        from young_aletheia.message_generator import ChildMessageGenerator
-        from young_aletheia.learning_engine import LearningEngine
+        from aletheia.young_aletheia.persona import PersonaManager
+        from aletheia.young_aletheia.developmental_model import DevelopmentalModel
+        from aletheia.young_aletheia.message_generator import ChildMessageGenerator
+        from aletheia.young_aletheia.learning_engine import LearningEngine
         
         # Initialize in order (with dependencies)
         self.persona_manager = PersonaManager(self.data_dir)
