@@ -42,5 +42,6 @@ CONFIG = {
     # === Young Aletheia ===
     "YOUNG_ALETHEIA_ENABLED": os.getenv("YOUNG_ALETHEIA_ENABLED", "true").lower() == "true",
     "PARENT": os.getenv("PARENT", "Mom"),
+    "ADD_KID_STYLE": os.getenv("ADD_KID_STYLE", "true"),
     
 }

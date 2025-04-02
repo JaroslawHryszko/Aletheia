@@ -12,6 +12,7 @@ import emoji
 from datetime import datetime
 from aletheia.core.multi_gpu_model_loader import load_model
 from aletheia.utils.logging import log_event
+from aletheia.config import CONFIG
 
 class ChildMessageGenerator:
     """Generates child-like messages based on development level and persona"""
@@ -83,10 +84,11 @@ class ChildMessageGenerator:
         )
         
         # Decode the generated message
-        generated = tokenizer.decode(output[0], skip_special_tokens=True)
+        message = tokenizer.decode(output[0], skip_special_tokens=True)
         
         # Clean up the message and add child-like elements
-        message = self._process_generated_text(generated, characteristics)
+        if CONFIG.get("ADD_KID_STYLE", True):
+            message = self._process_generated_text(message, characteristics)
         
         # Log interaction for developmental tracking
         if "parent_message" in context:
@@ -190,11 +192,11 @@ Generate {persona.name}'s message:
 """
         
         # Add language preference if specified
-        if "language" in context:
-            if context["language"].lower() == "polish":
-                prompt += "\nPlease generate the message in Polish language."
-            else:
-                prompt += "\nPlease generate the message in English language."
+        #if "language" in context:
+        #    if context["language"].lower() == "polish":
+        #        prompt += "\nPlease generate the message in Polish language."
+        #    else:
+        #        prompt += "\nPlease generate the message in English language."
         
         return prompt
     
