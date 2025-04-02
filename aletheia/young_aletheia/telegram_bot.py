@@ -16,6 +16,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from pathlib import Path
 from aletheia.utils.logging import log_event
+from aletheia.config import CONFIG
 
 class YoungAletheiaTelegramBot:
     """Telegram bot interface for Young Aletheia"""
