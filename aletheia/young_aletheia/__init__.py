@@ -17,7 +17,7 @@ def initialize_young_aletheia(app=None):
     Returns:
         YoungAletheiaIntegration instance or None if initialization failed
     """
-    from young_aletheia.integration import YoungAletheiaIntegration
+    from aletheia.young_aletheia.integration import YoungAletheiaIntegration
     
     try:
         # Create the integration
