@@ -1,4 +1,4 @@
-# Aletheia - Kompletna Dokumentacja Techniczna
+# Aletheia - Dokumentacja Techniczna
 
 ## Spis Treści
 
@@ -698,6 +698,4 @@ W przeciwieństwie do tradycyjnych systemów opartych na szablonach, Aletheia rz
 
 ---
 
-**Autor dokumentacji**: Claude 3.7 Sonnet  
-**Data utworzenia**: 01.04.2025  
 **Licencja**: GNU Affero General Public License v3.0
