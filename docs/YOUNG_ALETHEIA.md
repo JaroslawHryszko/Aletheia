@@ -135,9 +135,9 @@ After integration, you can run Young Aletheia in several ways:
 - Web Interface: http://localhost:8000/young/
 - Customization: http://localhost:8000/young/customization
 - REST API endpoints:
-  - POST /young/message - Send a message to the child
-  - GET /young/status - Get the child's current status
-  - POST /young/update - Update the child's parameters
+  - POST /young/message - Send a message to the YoungAletheia
+  - GET /young/status - Get the YoungAletheia's current status
+  - POST /young/update - Update the YoungAletheia's parameters
 - Telegram bot (if configured)
 
 ## Troubleshooting
@@ -159,4 +159,4 @@ After integration, you can run Young Aletheia in several ways:
 
 ## Credits
 
-Young Aletheia was developed as an extension to the Aletheia project, enabling it to emulate a child's development and interaction patterns.
+Young Aletheia was developed as an extension to the Aletheia project, enabling it to emulate a growing human's development and interaction patterns.
